@@ -1,2 +1,2 @@
 # OrgaLog
-JavaScript and HTML Log Viewer
+Log Viewer written in JavaScript and HTML 
