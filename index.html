@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+    <link rel="stylesheet" href="assets/css/fonts.css">
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <style type="text/css" media="print">
+        @page {
+            size: landscape;
+        }
+    </style>
+    <script>
+        var timestampFormat = "DD MMM YYYY HH:mm:ss"
+    </script>
+
+    <title>OrgaLog</title>
+    <link rel="shortcut icon" type="image/png" href="./assets/img/gunter.png" />
+</head>
+
+<body>
+    <div class="container-fluid">
+        <nav class="navbar navbar-dark">
+            OrgaLog
+        </nav>
+        <br />
+        <div class="row">
+            <div class="col-sm-12">
+                <div class="input-group mb-3 print-hide">
+                    <input type="text" class="form-control" placeholder="Filter Data" name="newfilter" id="newfilter" aria-label="newfilter" aria-describedby="button-addfilter" readonly autocomplete="off">
+                    <div class="input-group-append">
+                        <button class="btn btn-secondary" type="submit" id="button-addfilter" value="+"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+                <ul id="filter-display-list"></ul>
+                <div id="time-series"></div>
+                <div id="status-message" class="print-page-break">Awaiting data file</div>
+                <div id="date-range" class="print-page-break">Awaiting data file</div>
+                <div><button id='show-all'>all</button><button>year</button></div>
+                <svg></svg>
+                <div id="tabular-data"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/d3.v5.min.js" charset="utf-8 "></script>
+    <script src="assets/js/moment.min.js" charset="utf-8 "></script>
+    <script src="assets/js/time-series.js" charset="utf-8 "></script>
+    <script src="assets/js/autocomplete.js" charset="utf-8 "></script>
+    <script src="assets/js/filter.js" charset="utf-8 "></script>
+    <!--    
+    <script src="assets/js/jstat.js "></script>
+    
+    <script src="assets/js/linearregression.js "></script>
+    <script src="assets/js/tablesort.js "></script> -->
+
+    <!--
+    TODO: field summaries <Protocol: 2 unique values, IP: 300 unique values>
+
+-->
+
+
+</body>
+
+</html>

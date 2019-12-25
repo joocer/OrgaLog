@@ -1,0 +1,13 @@
+@font-face {
+  font-family: 'Poppins';
+  src: url('../webfonts/Poppins-SemiBold.ttf');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Roboto Condensed';
+  src: url('../webfonts/RobotoCondensed-Light.ttf');
+  font-weight: 200;
+  font-style: normal;
+}

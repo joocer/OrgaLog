@@ -1,0 +1,115 @@
+body {
+    color: #444;
+    font-family: 'Roboto Condensed';
+    -webkit-print-color-adjust: exact !important;
+}
+
+#filter-display-list {
+    padding: 0;
+    list-style-type: none;
+}
+
+#filter-display-list li {
+    display: inline;
+}
+
+#filter-display-list button {
+    margin: 0 0.25em 0.25em 0;
+}
+
+#status-message {
+    margin: 0.5em 0;
+    font-weight: 600;
+}
+
+h1 {
+    margin: 0.5em 0;
+    font-family: 'Poppins';
+}
+
+.modebar {
+    display: none !important;
+}
+
+.autocomplete-items {
+    position: absolute;
+    border: 1px solid #d4d4d4;
+    border-bottom: none;
+    border-top: none;
+    z-index: 99;
+    /*position the autocomplete items to be the same width as the container:*/
+    top: 100%;
+    left: 0;
+    right: 0;
+}
+
+.autocomplete-items div {
+    padding: 10px;
+    cursor: pointer;
+    background-color: #fff;
+    border-bottom: 1px solid #d4d4d4;
+}
+
+.autocomplete-items div:hover {
+    /*when hovering an item:*/
+    background-color: #d4d4d4;
+}
+
+.autocomplete-active {
+    /*when navigating through the items using the arrow keys:*/
+    background-color: #256EE9 !important;
+    color: #ffffff;
+}
+
+.btn-outline-secondary {
+    border: 1px solid #ced4da;
+}
+
+.filter-button {
+    background-color: #256EE9;
+    color: #fff;
+    border: 0;
+}
+
+.filter-button .fas {
+    padding: 0px 2px 0px 10px;
+}
+
+.fa-sort {
+    color: #CCC;
+}
+
+.navbar-dark {
+    background-color: #256EE9;
+    color: #fff;
+}
+
+.navbar-dark .fas {
+    font-size: 1.3em;
+    padding: 0.4em;
+    color: #fff;
+}
+
+.form-inline .mb-3 {
+    margin: 0 !important;
+    padding: 0;
+    border: 0;
+}
+
+.form-inline label {
+    justify-content: inherit !important;
+}
+
+ul {
+    margin: 0;
+}
+
+.line {
+    fill: none;
+    stroke: #00abff;
+    stroke-width: 1;
+}
+
+table {
+    font-size: 0.7em;
+}
