@@ -1,5 +1,8 @@
 // ,
 
+// TODO - select the timestamp format based on the range
+var timestampFormat = "DD MMM YYYY HH:mm:ss"
+
 class OrgaLog {
 
     constructor() {
@@ -7,53 +10,64 @@ class OrgaLog {
         this._time_field = undefined;
         this._value_range = undefined;
         this._full_data = [];
+        this._data_index = [];
     }
 
     static version() { return "0.0" }
 
     // from another OrgaLog instance, a file or an array
-    acquire(source) {
-        this.acquire_file(source);
-//        if (arguments.length == 1) { return arguments[0] }
-//        else if (arguments.length == 2) { return [arguments[0], arguments[1]] }
+    acquire(source, callback) {
+        console.log('TODO: detect the source type')
+        this.acquire_file(source, callback);
+        //        if (arguments.length == 1) { return arguments[0] }
+        //        else if (arguments.length == 2) { return [arguments[0], arguments[1]] }
     }
 
-    acquire_file(filename) {
-        console.log(filename);
-        d3.csv(filename).then(function(data) {
-            console.log(data);
-            interpret(data);
+    acquire_file(filename, callback) {
+        let self = this;
+        d3.csv(filename).then(function (data) {
+            self._process(data);
+            if (callback !== undefined) {
+                callback();
+            }
         });
     }
 
-    interpret(data) {
-        this._full_data = data;
-        console.log(getTimefield(this._full_data))
-    }
+    _process(data) {
 
-abc() {
-    d3.csv(filename).then(function (rawdata) {
-        // TODO: work out the range and then change the timestamp format accordingly
-        var time_field = getTimefield(rawdata);
+        // persist the full data
+        this._full_data = data;
+
+        // find the date field
+        console.log('TODO: if the field has been specificed but isnt in the data, thrown an error');
+        if (this._time_field !== undefined) {
+            this._time_field = getTimefield(this._full_data);
+        }
 
         // TODO: this is slow - would map() do this faster?
-        for (var i = 0; i < rawdata.length; i++) {
-            data.push({
-                timestamp: moment(rawdata[i][time_field]).format(timestampFormat), // <- timestamp format will change depending on grouping sizes
+        // TODO: Change the timestamp format depending on grouping sizes
+        var simplified = []
+        for (var i = 0; i < this._full_data.length; i++) {
+            simplified.push({
+                timestamp: moment(this._full_data[i][this._time_field]).format(timestampFormat),
                 value: 1
             });
         }
 
-
+        // bin the events by timestamps
         var eventCount = d3.nest()
             .key(function (d) { return d.timestamp; })
             .rollup(function (v) { return v.length; })
-            .entries(data);
+            .entries(simplified);
+
+        // rename the 'key' field to be 'timestamp'
         for (var i = 0; i < eventCount.length; i++) {
             eventCount[i].timestamp = new Date(eventCount[i]['key']);
             delete eventCount[i].key;
         }
-        data = eventCount.sort(function compare(a, b) {
+
+        //
+        this._data_index = eventCount.sort(function compare(a, b) {
             if (new Date(a.timestamp) < new Date(b.timestamp)) {
                 return -1;
             }
@@ -63,30 +77,53 @@ abc() {
             return 0;
         })
 
-        min_date = d3.min(data, function (d) {
+        var min_date = d3.min(this._data_index, function (d) {
             return new Date(d.timestamp);
         });
-        max_date = d3.max(data, function (d) {
+        var max_date = d3.max(this._data_index, function (d) {
             return new Date(d.timestamp);
         });
-        max_value = d3.max(data, function (d) {
+        this._date_range = [min_date, max_date];
+
+        var max_value = d3.max(this._data_index, function (d) {
             return d.value;
         });
-    })
+        var min_value = d3.min(this._data_index, function (d) {
+            return d.value;
+        });
+        this._value_range = [min_value, max_value];
     }
-//
-get time_field() { return this._time_field }
-set time_field(value) {
-    console.log('TODO: rebuild timestamp index')
-    this._time_field = value;
-}
 
-// range of dates from the data set
-get date_range() { return this._date_range }
-// range of values from the data set 
-get value_range() { return this._value_range }
-//
-get full_data() { return this._full_data }
+    range(min, max) {
+        console.log('range (', min, ', ', max, ')');
+        return this;
+    }
+
+    filter(filters) {
+        console.log('filter (filters)');
+        return this;
+    }
+
+    sort(field, direction) {
+        console.log('sort (', field, ',', direction, ')');
+        return this;
+    }
+
+
+    //
+    get time_field() { return this._time_field }
+    set time_field(value) {
+        this._time_field = value;
+        this._process(this._full_data);
+    }
+
+    // range of dates from the data set
+    get date_range() { return this._date_range }
+    // range of values from the data set 
+    get value_range() { return this._value_range }
+    //
+    get full_data() { return this._full_data }
+    get index() { return this._data_index }
 }
 
 
@@ -98,7 +135,8 @@ function isDate(sDate) {
 }
 
 function getTimefield(data) {
-    for (var h = 0; h < data.columns.length; h++) {
+    var num_columns = data.columns.length;
+    for (var h = 0; h < num_columns; h++) {
         var cell_value = data[0][data.columns[h]];
         if (isDate(cell_value)) {
             return data.columns[h];
