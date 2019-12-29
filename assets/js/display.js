@@ -94,7 +94,7 @@ function display_initial(ol) {
             var minCursor = RangeSearch(ol.data, sx[0]);
             var maxCursor = RangeSearch(ol.data, sx[1]);
             var matches = maxCursor - minCursor;
-            document.getElementById("status-message").innerHTML = matches + " of " + ol.data.length + " records";
+            document.getElementById("record-count").innerHTML = matches + " of " + ol.data.length + " records";
             DateFilterWrapper(sx);
         }
     }
@@ -106,13 +106,13 @@ function display_initial(ol) {
         var matches = maxCursor - minCursor;
         var filtered = range(minCursor, maxCursor);
 
-        document.getElementById("status-message").innerHTML = matches + " of " + ol.data.length + " records (" + minCursor + "," + maxCursor + ")";
+        document.getElementById("record-count").innerHTML = matches + " of " + ol.data.length + " records";
 
         if (matches === 0) {
             document.getElementById("tabular-data").innerHTML = "";
             return false;
         }
-        document.getElementById("tabular-data").innerHTML = renderTable(ol.data, filtered);
+        document.getElementById("tabular-data").innerHTML = renderTable(ol.data, filtered, 0, 25);
     }
 
     gBrush.call(brush.move, ol.date_range.map(x_scale));
@@ -166,26 +166,32 @@ function htmlEncode(str) {
 
 // TODO: Sort fields
 // TODO: show/hide fields
-function renderTable(data, indexes) {
+function renderTable(data, indexes, page, page_size) {
     var row_data = ''
     row_data += "<tr>"
     for (var h = 0; h < data.columns.length; h++) {
         row_data += "<th>" + htmlEncode(data.columns[h]) + "<th>"
     }
     row_data += "</tr>"
-    var max_rows = 25;
+    var max_rows = page_size;
     if (indexes.length < max_rows) { max_rows = indexes.length; }
     for (var i = 0; i < max_rows; i++) {
         row_data += "<tr>";
+        var index = i + (page * page_size);
         for (var h = 0; h < data.columns.length; h++) {
-            var cell_value = data[indexes[i]][data.columns[h]];
+            var cell_value = data[indexes[index]][data.columns[h]];
             if (is_date(cell_value)) {
-                row_data += "<td>" + moment(data[indexes[i]][data.columns[h]]).format(timestampFormat) + "<td>"
+                row_data += "<td>" + moment(data[indexes[index]][data.columns[h]]).format(timestampFormat) + "<td>"
             } else {
-                row_data += "<td>" + htmlEncode(data[indexes[i]][data.columns[h]]) + "<td>"
+                row_data += "<td>" + htmlEncode(data[indexes[index]][data.columns[h]]) + "<td>"
             }
         }
         row_data += "</tr>";
     }
-    return "<table class='table table-striped table-sm'>" + row_data + "</table>"
+
+    var header = "page " + (page + 1) + " of " + Math.ceil(indexes.length / page_size) + 
+        ", " + page_size + " items per page" +
+        "[select columns]" +
+        "[export]"
+    return header + "<table class='table table-striped table-sm'>" + row_data + "</table>";
 }

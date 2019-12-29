@@ -17,11 +17,6 @@ body {
     margin: 0 0.25em 0.25em 0;
 }
 
-#status-message {
-    margin: 0.5em 0;
-    font-weight: 600;
-}
-
 h1 {
     margin: 0.5em 0;
     font-family: 'Poppins';
@@ -112,4 +107,16 @@ ul {
 
 table {
     font-size: 0.7em;
+}
+
+.alignleft {
+	float: left;
+}
+.alignright {
+	float: right;
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: 0;
 }
