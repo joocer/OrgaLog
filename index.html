@@ -2,22 +2,16 @@
 <html lang="en">
 
 <head>
+    <title>OrgaLog</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/css/fontawesome.min.css">
     <link rel="stylesheet" href="assets/css/fonts.css">
     <link rel="stylesheet" href="assets/css/style.css">
-
-    <style type="text/css" media="print">
-        @page {
-            size: landscape;
-        }
-    </style>
-
-    <title>OrgaLog</title>
     <link rel="shortcut icon" type="image/png" href="./assets/img/gunter.png" />
 </head>
+
 
 <body>
     <div class="container-fluid">
@@ -40,7 +34,27 @@
                     <p id="date-range" class="alignright">Awaiting data file.</p>
                 </div>
                 <svg></svg>
+
+                <div>[Rows] [Columns] [Export]</div>
+
                 <div id="tabular-data"></div>
+
+                <nav>
+                    Page N of Y
+                    <ul class="pagination justify-content-end">
+                      <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1">Previous</a>
+                      </li>
+                      <li class="page-item"><a class="page-link" href="#">1</a></li>
+                      <li class="page-item"><a class="page-link" href="#">2</a></li>
+                      <li class="page-item"><a class="page-link" href="#">3</a></li>
+                      <li class="page-item">
+                        <a class="page-link" href="#">Next</a>
+                      </li>
+                    </ul>
+                  </nav>
+
+<div>footer</div>
             </div>
         </div>
     </div>
@@ -62,20 +76,24 @@
 
 -->
     <script>
+        //const file = './data/outside_sensor_data.csv'
+        //const file = './data/nvd.csv'
+        //const file = './data/cve_fulldata_with_scores.csv'
+        const file = './data/tweets_1_day.csv' // 904968 records
+        //const file = './data/tweets.csv'; // 2604503 records
+        //const file = './data/netflow.csv'
+
         var orgalog = new OrgaLog();
-        d3.csv('./data/netflow.csv').then(function(data) {
-            orgalog.process(data);
+        d3.csv(file).then(function(data) {
+            orgalog.process(data, false);
             display_initial(orgalog);
+            console.log(data)
         });
 
-        //orgalog.acquire('./data/outside_sensor_data.csv')
-        //orgalog.acquire('./data/nvd.csv')
-        //orgalog.acquire('./data/cve_fulldata_with_scores.csv')
-        //orgalog.acquire('./data/tweets_1_day.csv') // 904968 records
-        //orgalog.acquire('./data/tweets.csv') // 2604503 records
+
 
         // chart_data = orgalog;
-        var tabular_data = orgalog.view().dedupe().range(0, 1).filter(undefined).sort('time', true);
+        //var tabular_data = orgalog.view().dedupe().range(0, 1).filter(undefined).sort('time', true);
     </script>
 
 </body>

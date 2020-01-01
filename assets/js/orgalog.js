@@ -1,4 +1,4 @@
-const timestampFormat = "DD MMM YYYY HH:mm"
+const timestampFormat = "DD MMM YYYY HH:mm:ss"
 
 class OrgaLog {
 
@@ -24,17 +24,40 @@ class OrgaLog {
         this._data = [];
         this._data_index = [];
         this._date_fields = [];
+        this._deduped = false;
+        this._columns = [];
     }
 
     static version() { return "0.0" }
 
-    process(data) {
-        // persist the full data, clone it to prevent problems if the original dataset changes
-        this._data = data;
+    process(data, deduplicate) {
+
+        let self = this;
+        if (data.columns !== undefined) { this._columns = data.columns }
+
+        var stime = Date.now();
+        if (deduplicate) {
+            var unique = {};
+            data.forEach(function (x) {
+                let rowhash = JSON.stringify(x).hashCode();
+                //let rowhash = hex_md5(JSON.stringify(x));
+                if (!unique[rowhash]) {
+                    self._data.push(x);
+                    unique[rowhash] = true;
+                }
+            });
+            unique = undefined;
+            this._data.columns = this._columns;
+            this._deduped = true;
+        }
+        else {
+            this._data = data;
+        }
+        console.log('DEDUPE: ', Date.now() - stime);
 
         // find the date field
         console.log('TODO: if the field has been specificed but isnt in the data, thrown an error');
-        this._date_fields = get_date_fields(this._data);
+        this._date_fields = get_date_fields(data);
         if (this._date_field === undefined) {
             if (this.date_fields.length > 0) {
                 this._date_field = this._date_fields[0];
@@ -46,14 +69,10 @@ class OrgaLog {
         }
         console.log('DEBUG: using ', this._date_field, ' as data column');
 
-        console.log('TODO: this is slow - would map() do this faster?');
-        var simplified = []
-        for (var i = 0; i < this._data.length; i++) {
-            simplified.push({
-                timestamp: moment(this._data[i][this._date_field]).format(timestampFormat),
-                value: 1
-            });
-        }
+        const date_field = this._date_field;
+        var simplified = this._data.map(function(value, index) {
+            return({timestamp: value[date_field], value: 1 })
+        });
 
         // bin the events by timestamps
         var eventCount = d3.nest()
@@ -61,34 +80,32 @@ class OrgaLog {
             .rollup(function(v) { return v.length; })
             .entries(simplified);
 
-        console.log(eventCount);
-
-        console.log('TODO: see if theres anything that can be done to limit the number of new Date() calls needed');
         // rename the 'key' field to be 'timestamp' (changed by the nest function above)
         for (var i = 0; i < eventCount.length; i++) {
-            eventCount[i].timestamp = new Date(eventCount[i]['key']);
+            // convert date to a number to make it easier to work with
+            eventCount[i].timestamp = new Date(eventCount[i]['key']).getTime();
             delete eventCount[i].key;
         }
 
         // sort the data by the timestamps
         this._data_index = eventCount.sort(function compare(a, b) {
             //if (a.Display < b.Display) { return -1; } return 1;
-            if (new Date(a.timestamp) < new Date(b.timestamp)) {
+            if (a.timestamp < b.timestamp) {
                 return -1;
             }
-            if (new Date(b.timestamp) < new Date(a.timestamp)) {
+            if (b.timestamp < a.timestamp) {
                 return 1;
             }
             return 0;
         })
 
         var min_date = d3.min(this._data_index, function(d) {
-            return new Date(d.timestamp);
+            return d.timestamp;
         });
         var max_date = d3.max(this._data_index, function(d) {
-            return new Date(d.timestamp);
+            return d.timestamp;
         });
-        this._date_range = [min_date, max_date];
+        this._date_range = [new Date(min_date), new Date(max_date)];
 
         var max_value = d3.max(this._data_index, function(d) {
             return d.value;
@@ -109,55 +126,24 @@ class OrgaLog {
 
     // range of dates from the data set
     get date_range() {
-            console.log('date_range:', this._date_range);
             return this._date_range;
         }
         // range of values from the data set 
     get value_range() { return this._value_range }
-        //
     get data() { return this._data }
-    get data_index() { return this._data_index }
+    //get data_index() { return this._data_index }
 
-    view() {
-        var olv = new OrgaLogView(this);
-        return olv;
+    // this limits the range, applies filters and orders entries
+    // the data is not affected, it returns indices to the data
+    view(range, filters, order) {
+        if (range === undefined) { range = this._date_range }
+        if (filters === undefined) { filters = [] }
+        if (order === undefined) { order = this._date_field } 
+        // apply range and filters, 
+
+        return this._data_index;
     }
 }
-
-class OrgaLogView {
-    constructor() {}
-
-    dedupe() {
-        console.log('dedupe()');
-        var response = Object.create(this);
-
-        // do action on 'response.data'
-        return response;
-    }
-
-    range(min, max) {
-        console.log('range (', min, ', ', max, ')');
-        var response = Object.create(this);
-        // do action on 'response.data'
-        return response;
-    }
-
-    filter(filters) {
-        console.log('filter (filters)');
-        var response = Object.create(this);
-        // do action on 'response.data'
-        return response;
-    }
-
-    sort(field, direction) {
-        console.log('sort (', field, ',', direction, ')');
-        var response = Object.create(this);
-        // do action on 'response.data'
-        return response;
-    }
-
-}
-
 
 function is_date(sDate) {
     if (sDate.toString() == parseInt(sDate).toString()) return false;
@@ -180,3 +166,15 @@ function get_date_fields(data) {
     console.log("DEBUG: get_date_fields found " + date_fields.length + " date fields", date_fields)
     return date_fields;
 }
+
+// slightly faster than the copy off Stack Overflow, but still slow 
+// about 2x faster than MD5, but this has more clashes
+String.prototype.hashCode = function() {
+    let hash = 0
+    for (var i = this.length, chr; i > 0; i--) {
+      chr   = this.charCodeAt(i);
+      hash  = ((hash << 5) - hash) + chr;
+      hash = hash & hash;  // Convert to 32-bit integer
+    }
+    return hash;
+  };

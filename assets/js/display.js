@@ -9,6 +9,8 @@ var margin = {
 width = width - margin.left - margin.right - 25;
 height = height - margin.top - margin.bottom;
 
+var page_size = 25;
+
 var svg = d3.select("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
@@ -20,7 +22,7 @@ function display_initial(ol) {
     x_scale.domain(ol.date_range);
 
     var y_scale = d3.scaleLinear()
-        .domain([0, d3.max(ol.data_index, function(d) {
+        .domain([0, d3.max(ol.view(), function(d) {
             return +d.value;
         })])
         .range([height, 0]);
@@ -40,7 +42,7 @@ function display_initial(ol) {
 
     svg.append("g")
         .append("path")
-        .datum(ol.data_index)
+        .datum(ol.view())
         .attr("class", "line")
         .attr("d", d3.line()
             .x(function(d) {
@@ -95,11 +97,11 @@ function display_initial(ol) {
             var maxCursor = RangeSearch(ol.data, sx[1]);
             var matches = maxCursor - minCursor;
             document.getElementById("record-count").innerHTML = matches + " of " + ol.data.length + " records";
-            DateFilterWrapper(sx);
+            date_range_wrapper(sx);
         }
     }
 
-    function DateFilter(date_range) {
+    function filter_date_range(date_range) {
         var minCursor = RangeSearch(ol.data, date_range[0]);
         var maxCursor = RangeSearch(ol.data, date_range[1]);
         //console.log(minCursor, maxCursor)
@@ -112,7 +114,7 @@ function display_initial(ol) {
             document.getElementById("tabular-data").innerHTML = "";
             return false;
         }
-        document.getElementById("tabular-data").innerHTML = renderTable(ol.data, filtered, 0, 25);
+        document.getElementById("tabular-data").innerHTML = renderTable(ol.data, filtered, 0);
     }
 
     gBrush.call(brush.move, ol.date_range.map(x_scale));
@@ -120,12 +122,12 @@ function display_initial(ol) {
     // this wrapper puts a slight delay on updating the table, this smooths selecting
     var timer = undefined;
 
-    function DateFilterWrapper(date_range) {
+    function date_range_wrapper(date_range) {
         if (timer !== null) {
             window.clearTimeout(timer);
         }
         timer = window.setTimeout(function() {
-            DateFilter(date_range);
+            filter_date_range(date_range);
             delete timer;
             timer = undefined;
         }, 250);
@@ -135,16 +137,16 @@ function display_initial(ol) {
 // TODO: This is sloppy
 // TODO: if its a min, step forward until condition met (duplicates inclusive)
 // TODO: if its a max, step backward until condition met (duplictes inclusive)
-function RangeSearch(arr, x) {
-    x = new Date(x);
+function RangeSearch(values, value) {
+    value = new Date(value);
     var mid;
     let start = 0,
-        end = arr.length - 1;
+        end = values.length - 1;
     while (start <= end) {
         mid = Math.floor((start + end) / 2);
-        var ts = new Date(arr[mid].timestamp);
-        if (ts == x) return mid;
-        else if (ts < x)
+        var ts = new Date(values[mid].timestamp);
+        if (ts == value) return mid;
+        else if (ts < value)
             start = mid + 1;
         else
             end = mid - 1;
@@ -166,7 +168,7 @@ function htmlEncode(str) {
 
 // TODO: Sort fields
 // TODO: show/hide fields
-function renderTable(data, indexes, page, page_size) {
+function renderTable(data, indexes, page) {
     var row_data = ''
     row_data += "<tr>"
     for (var h = 0; h < data.columns.length; h++) {
@@ -189,9 +191,5 @@ function renderTable(data, indexes, page, page_size) {
         row_data += "</tr>";
     }
 
-    var header = "page " + (page + 1) + " of " + Math.ceil(indexes.length / page_size) + 
-        ", " + page_size + " items per page" +
-        "[select columns]" +
-        "[export]"
-    return header + "<table class='table table-striped table-sm'>" + row_data + "</table>";
+    return "<table class='table table-striped table-sm'>" + row_data + "</table>";
 }
