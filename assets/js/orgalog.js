@@ -1,4 +1,4 @@
-const timestampFormat = "DD MMM YYYY HH:mm:ss"
+const timestampFormat = "DD MMM YYYY HH:mm"
 
 class OrgaLog {
 
@@ -38,7 +38,7 @@ class OrgaLog {
         var stime = Date.now();
         if (deduplicate) {
             var unique = {};
-            data.forEach(function (x) {
+            data.forEach(function(x) {
                 let rowhash = JSON.stringify(x).hashCode();
                 //let rowhash = hex_md5(JSON.stringify(x));
                 if (!unique[rowhash]) {
@@ -49,8 +49,7 @@ class OrgaLog {
             unique = undefined;
             this._data.columns = this._columns;
             this._deduped = true;
-        }
-        else {
+        } else {
             this._data = data;
         }
         console.log('DEDUPE: ', Date.now() - stime);
@@ -70,8 +69,8 @@ class OrgaLog {
         console.log('DEBUG: using ', this._date_field, ' as data column');
 
         const date_field = this._date_field;
-        var simplified = this._data.map(function(value, index) {
-            return({timestamp: value[date_field], value: 1 })
+        var simplified = this._data.map(function(value) {
+            return ({ timestamp: value[date_field], value: 1 })
         });
 
         // bin the events by timestamps
@@ -80,24 +79,20 @@ class OrgaLog {
             .rollup(function(v) { return v.length; })
             .entries(simplified);
 
+        var stime = Date.now();
         // rename the 'key' field to be 'timestamp' (changed by the nest function above)
-        for (var i = 0; i < eventCount.length; i++) {
-            // convert date to a number to make it easier to work with
-            eventCount[i].timestamp = new Date(eventCount[i]['key']).getTime();
-            delete eventCount[i].key;
-        }
+        eventCount = eventCount.map(function(value) {
+            return ({
+                timestamp: new Date(value['key']).getTime(),
+                value: value['value']
+            })
+        });
+        console.log('MAP: ', Date.now() - stime);
 
         // sort the data by the timestamps
         this._data_index = eventCount.sort(function compare(a, b) {
-            //if (a.Display < b.Display) { return -1; } return 1;
-            if (a.timestamp < b.timestamp) {
-                return -1;
-            }
-            if (b.timestamp < a.timestamp) {
-                return 1;
-            }
-            return 0;
-        })
+            return a.timestamp - b.timestamp;
+        });
 
         var min_date = d3.min(this._data_index, function(d) {
             return d.timestamp;
@@ -131,15 +126,23 @@ class OrgaLog {
         // range of values from the data set 
     get value_range() { return this._value_range }
     get data() { return this._data }
-    //get data_index() { return this._data_index }
+        //get data_index() { return this._data_index }
 
     // this limits the range, applies filters and orders entries
     // the data is not affected, it returns indices to the data
     view(range, filters, order) {
+        let self = this;
+
         if (range === undefined) { range = this._date_range }
         if (filters === undefined) { filters = [] }
-        if (order === undefined) { order = this._date_field } 
+        if (order === undefined) { order = this._date_field }
         // apply range and filters, 
+
+        // sort by field
+        // reverse if the fist character is '-' (ascii 45)
+        let modifier = 1;
+        if (order.charCodeAt[0] = 45) { modifier = -1 }
+
 
         return this._data_index;
     }
@@ -172,9 +175,9 @@ function get_date_fields(data) {
 String.prototype.hashCode = function() {
     let hash = 0
     for (var i = this.length, chr; i > 0; i--) {
-      chr   = this.charCodeAt(i);
-      hash  = ((hash << 5) - hash) + chr;
-      hash = hash & hash;  // Convert to 32-bit integer
+        chr = this.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash = hash & hash; // Convert to 32-bit integer
     }
     return hash;
-  };
+};
