@@ -1,5 +1,6 @@
 data/
-server.js
-test.html
+start.cmd
 assets/js/*Copy.js
 assets/js/_*.js
+node_modules/
+electron-sample-apps-master/

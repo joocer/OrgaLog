@@ -1,0 +1,19 @@
+{
+  "name": "orgalog",
+  "version": "1.0.0",
+  "description": "Log Viewer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joocer/OrgaLog.git"
+  },
+  "author": "Justin Joyce",
+  "license": "Apache v2.0",
+  "bugs": {
+    "url": "https://github.com/joocer/OrgaLog/issues"
+  },
+  "homepage": "https://github.com/joocer/OrgaLog#readme"
+}

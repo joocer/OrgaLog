@@ -40,7 +40,6 @@ class OrgaLog {
             var unique = {};
             data.forEach(function(x) {
                 let rowhash = JSON.stringify(x).hashCode();
-                //let rowhash = hex_md5(JSON.stringify(x));
                 if (!unique[rowhash]) {
                     self._data.push(x);
                     unique[rowhash] = true;
