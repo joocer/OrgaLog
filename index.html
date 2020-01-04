@@ -12,16 +12,12 @@
     <link rel="shortcut icon" type="image/png" href="./assets/img/gunter.png" />
 </head>
 
-
 <body>
     <div class="container-fluid">
-        <nav class="navbar navbar-dark">
-            OrgaLog
-        </nav>
-        <br />
         <div class="row">
             <div class="col-sm-12">
                 <div class="input-group mb-3 print-hide">
+                    <button class="btn btn-primary" type="submit" id="button-openfile" value="Open">Open File</button>
                     <input type="text" class="form-control" placeholder="Filter Data" name="newfilter" id="newfilter" aria-label="newfilter" aria-describedby="button-addfilter" readonly autocomplete="off">
                     <div class="input-group-append">
                         <button class="btn btn-secondary" type="submit" id="button-addfilter" value="+"><i class="fas fa-plus"></i></button>
@@ -71,17 +67,30 @@
     <script>
         const {
             dialog
-        } = require('electron').remote
-        dialog.showOpenDialog({
-            properties: ['openFile']
-        }).then(function(file) {
-            console.log("FILE:", file.filePaths[0]);
-            var orgalog = new OrgaLog();
-            d3.csv(file.filePaths[0]).then(function(data) {
-                orgalog.process(data, false);
-                display_initial(orgalog);
-            })
-        });
+        } = require('electron').remote;
+
+        function open_file() {
+            dialog.showOpenDialog({
+                properties: ['openFile']
+            }).then(function(file) {
+                let filename = file.filePaths[0];
+                console.log("FILE:", filename);
+                window.document.title = "OrgaLog - " + htmlEncode(filename.substring(filename.lastIndexOf('\\') + 1));
+                var orgalog = new OrgaLog();
+                d3.csv(filename).then(function(data) {
+                    orgalog.process(data, false);
+                    display_initial(orgalog);
+                })
+            });
+        }
+
+        document.getElementById('button-openfile').addEventListener('click', open_file, false);
+
+        function htmlEncode(str) {
+            return str.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
+                return '&#' + i.charCodeAt(0) + ';'
+            });
+        }
     </script>
 
 </body>

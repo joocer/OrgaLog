@@ -46,29 +46,34 @@ class OrgaLog {
                 }
             });
             unique = undefined;
-            this._data.columns = this._columns;
-            this._deduped = true;
+            self._data.columns = self._columns;
+            self._deduped = true;
         } else {
-            this._data = data;
+            self._data = data;
         }
         console.log('DEDUPE: ', Date.now() - stime);
 
         // find the date field
         console.log('TODO: if the field has been specificed but isnt in the data, thrown an error');
-        this._date_fields = get_date_fields(data);
-        if (this._date_field === undefined) {
-            if (this.date_fields.length > 0) {
-                this._date_field = this._date_fields[0];
+        self._date_fields = get_date_fields(data);
+        if (self._date_field === undefined) {
+            if (self.date_fields.length > 0) {
+                self._date_field = self._date_fields[0];
             } else {
                 throw ("No columns contain a known date format")
             }
-        } else if (!this._date_fields.includes(this._date_field)) {
+        } else if (!self._date_fields.includes(self._date_field)) {
             throw ("No columns contain a known date format")
         }
-        console.log('DEBUG: using ', this._date_field, ' as data column');
+        console.log('DEBUG: using ', self._date_field, ' as data column');
 
-        const date_field = this._date_field;
-        var simplified = this._data.map(function(value) {
+        const date_field = self._date_field;
+        // sort by the date field
+        self._data = self._data.sort(function compare(a, b) {
+            return new Date(a[date_field]) - new Date(b[date_field]);
+        });
+
+        var simplified = self._data.map(function(value) {
             return ({ timestamp: value[date_field], value: 1 })
         });
 
@@ -89,25 +94,25 @@ class OrgaLog {
         console.log('MAP: ', Date.now() - stime);
 
         // sort the data by the timestamps
-        this._data_index = eventCount.sort(function compare(a, b) {
+        self._data_index = eventCount.sort(function compare(a, b) {
             return a.timestamp - b.timestamp;
         });
 
-        var min_date = d3.min(this._data_index, function(d) {
+        var min_date = d3.min(self._data_index, function(d) {
             return d.timestamp;
         });
-        var max_date = d3.max(this._data_index, function(d) {
+        var max_date = d3.max(self._data_index, function(d) {
             return d.timestamp;
         });
-        this._date_range = [new Date(min_date), new Date(max_date)];
+        self._date_range = [new Date(min_date), new Date(max_date)];
 
-        var max_value = d3.max(this._data_index, function(d) {
+        var max_value = d3.max(self._data_index, function(d) {
             return d.value;
         });
-        var min_value = d3.min(this._data_index, function(d) {
+        var min_value = d3.min(self._data_index, function(d) {
             return d.value;
         });
-        this._value_range = [min_value, max_value];
+        self._value_range = [min_value, max_value];
     }
 
     // expose this data so it can be user selected

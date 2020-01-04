@@ -93,22 +93,22 @@ function display_initial(ol) {
                 return "translate(" + [s[i], -height / 4] + ")";
             });
             document.getElementById("date-range").innerHTML = moment(sx[0]).format(timestampFormat) + " to " + moment(sx[1]).format(timestampFormat);
-            var minCursor = RangeSearch(ol.data, sx[0]);
-            var maxCursor = RangeSearch(ol.data, sx[1]);
+            var minCursor = range_search(ol.data, sx[0], ol.date_field);
+            var maxCursor = range_search(ol.data, sx[1], ol.date_field);
             var matches = maxCursor - minCursor;
-            document.getElementById("record-count").innerHTML = matches + " of " + ol.data.length + " records";
+            document.getElementById("record-count").innerHTML = matches + " of " + (ol.data.length - 1) + " records";
             date_range_wrapper(sx);
         }
     }
 
     function filter_date_range(date_range) {
-        var minCursor = RangeSearch(ol.data, date_range[0]);
-        var maxCursor = RangeSearch(ol.data, date_range[1]);
+        var minCursor = range_search(ol.data, date_range[0], ol.date_field);
+        var maxCursor = range_search(ol.data, date_range[1], ol.date_field);
         //console.log(minCursor, maxCursor)
         var matches = maxCursor - minCursor;
         var filtered = range(minCursor, maxCursor);
 
-        document.getElementById("record-count").innerHTML = matches + " of " + ol.data.length + " records";
+        document.getElementById("record-count").innerHTML = matches + " of " + (ol.data.length - 1) + " records";
 
         if (matches === 0) {
             document.getElementById("tabular-data").innerHTML = "";
@@ -134,24 +134,23 @@ function display_initial(ol) {
     }
 }
 
-// TODO: This is sloppy
-// TODO: if its a min, step forward until condition met (duplicates inclusive)
-// TODO: if its a max, step backward until condition met (duplictes inclusive)
-function RangeSearch(values, value) {
+function range_search(values, value, date_field) {
     value = new Date(value);
     var mid;
-    let start = 0,
-        end = values.length - 1;
+    let start = 0;
+    let end = values.length - 1;
+    if (new Date(values[start][date_field]) == value) { return start; }
+    if (new Date(values[end][date_field]) == value) { return end; }
     while (start <= end) {
         mid = Math.floor((start + end) / 2);
-        var ts = new Date(values[mid].timestamp);
-        if (ts == value) return mid;
-        else if (ts < value)
+        var ts = new Date(values[mid][date_field]);
+        if (ts == value) {
+            return mid;
+        } else if (ts < value)
             start = mid + 1;
         else
             end = mid - 1;
     }
-    //console.log(new Date(arr[mid].timestamp), '- ', x)
     return mid;
 }
 
