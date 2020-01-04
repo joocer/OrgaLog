@@ -11,15 +11,15 @@ height = height - margin.top - margin.bottom;
 
 var page_size = 25;
 
-var svg = d3.select("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
 function display_initial(ol) {
     var x_scale = d3.scaleTime().range([0, width]);
     x_scale.domain(ol.date_range);
+
+    var svg = d3.select("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var y_scale = d3.scaleLinear()
         .domain([0, d3.max(ol.view(), function(d) {

@@ -17,19 +17,18 @@
         <div class="row">
             <div class="col-sm-12">
                 <div class="input-group mb-3 print-hide">
-                    <button class="btn btn-primary" type="submit" id="button-openfile" value="Open">Open File</button>
+                    <button class="btn btn-primary" type="submit" id="button-openfile" value="Open"><i class="far fa-folder-open"></i> Open File</button>
                     <input type="text" class="form-control" placeholder="Filter Data" name="newfilter" id="newfilter" aria-label="newfilter" aria-describedby="button-addfilter" readonly autocomplete="off">
                     <div class="input-group-append">
                         <button class="btn btn-secondary" type="submit" id="button-addfilter" value="+"><i class="fas fa-plus"></i></button>
                     </div>
                 </div>
                 <ul id="filter-display-list"></ul>
-                <div id="time-series"></div>
                 <div>
                     <p id="record-count" class="alignleft">Awaiting data file.</p>
                     <p id="date-range" class="alignright">Awaiting data file.</p>
                 </div>
-                <svg></svg>
+                <svg id="time-series"></svg>
 
                 <div>[Rows] [Columns] [Export]</div>
 
@@ -59,6 +58,7 @@
         const d3 = require("d3");
         const moment = require("moment");
         const electron = require('electron');
+        const fs = require('fs');
     </script>
 
     <script src="assets/js/orgalog.js" charset="utf-8 "></script>
@@ -73,15 +73,17 @@
             dialog.showOpenDialog({
                 properties: ['openFile']
             }).then(function(file) {
+                document.getElementById("time-series").innerHTML = "";
                 let filename = file.filePaths[0];
                 console.log("FILE:", filename);
                 window.document.title = "OrgaLog - " + htmlEncode(filename.substring(filename.lastIndexOf('\\') + 1));
                 var orgalog = new OrgaLog();
-                d3.csv(filename).then(function(data) {
-                    orgalog.process(data, false);
-                    display_initial(orgalog);
-                })
-            });
+
+                var data = fs.readFileSync(filename, 'utf8').toString();
+                data = d3.csvParse(data);
+                orgalog.process(data, false);
+                display_initial(orgalog);
+            })
         }
 
         document.getElementById('button-openfile').addEventListener('click', open_file, false);
