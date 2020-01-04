@@ -1,6 +1,7 @@
 data/
-start.cmd
+runme.cmd
 assets/js/*Copy.js
 assets/js/_*.js
 node_modules/
 electron-sample-apps-master/
+package-lock.json

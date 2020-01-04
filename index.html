@@ -59,40 +59,29 @@
         </div>
     </div>
 
-    <script src="assets/js/moment.min.js" charset="utf-8 "></script>
-    <script src="assets/js/d3.v5.min.js" charset="utf-8 "></script>
+    <script>
+        const d3 = require("d3");
+        const moment = require("moment");
+        const electron = require('electron');
+    </script>
+
     <script src="assets/js/orgalog.js" charset="utf-8 "></script>
     <script src="assets/js/display.js" charset="utf-8 "></script>
 
-    <!--
-    <script src="assets/js/autocomplete.js" charset="utf-8 "></script>
-    <script src="assets/js/time-series.js" charset="utf-8 "></script>
-    <script src="assets/js/jstat.js "></script>
-    <script src="assets/js/linearregression.js "></script>
-    <script src="assets/js/tablesort.js "></script> -->
-
-    <!--
-    TODO: field summaries <Protocol: 2 unique values, IP: 300 unique values>
-
--->
     <script>
-        //const file = './data/outside_sensor_data.csv'
-        //const file = './data/nvd.csv'
-        //const file = './data/cve_fulldata_with_scores.csv'
-        const file = './data/tweets_1_day.csv' // 904968 records
-            //const file = './data/tweets.csv'; // 2817153 records
-            //const file = './data/netflow.csv'
-
-        var orgalog = new OrgaLog();
-        d3.csv(file).then(function(data) {
-            orgalog.process(data, false);
-            display_initial(orgalog);
+        const {
+            dialog
+        } = require('electron').remote
+        dialog.showOpenDialog({
+            properties: ['openFile']
+        }).then(function(file) {
+            console.log("FILE:", file.filePaths[0]);
+            var orgalog = new OrgaLog();
+            d3.csv(file.filePaths[0]).then(function(data) {
+                orgalog.process(data, false);
+                display_initial(orgalog);
+            })
         });
-
-
-
-        // chart_data = orgalog;
-        //var tabular_data = orgalog.view().dedupe().range(0, 1).filter(undefined).sort('time', true);
     </script>
 
 </body>
