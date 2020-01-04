@@ -73,8 +73,11 @@
             dialog.showOpenDialog({
                 properties: ['openFile']
             }).then(function(file) {
-                document.getElementById("time-series").innerHTML = "";
                 let filename = file.filePaths[0];
+                if (filename === undefined) {
+                    return null
+                }
+                document.getElementById("time-series").innerHTML = "";
                 console.log("FILE:", filename);
                 window.document.title = "OrgaLog - " + htmlEncode(filename.substring(filename.lastIndexOf('\\') + 1));
                 var orgalog = new OrgaLog();

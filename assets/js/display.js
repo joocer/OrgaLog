@@ -88,6 +88,7 @@ function display_initial(ol) {
         if (s == null) {
             handle.attr("display", "none");
         } else {
+            let stime = Date.now();
             var sx = s.map(x_scale.invert);
             handle.attr("display", null).attr("transform", function(d, i) {
                 return "translate(" + [s[i], -height / 4] + ")";
@@ -102,6 +103,7 @@ function display_initial(ol) {
     }
 
     function filter_date_range(date_range) {
+        //let stime = Date.now();
         var minCursor = range_search(ol.data, date_range[0], ol.date_field);
         var maxCursor = range_search(ol.data, date_range[1], ol.date_field);
         //console.log(minCursor, maxCursor)
@@ -115,6 +117,7 @@ function display_initial(ol) {
             return false;
         }
         document.getElementById("tabular-data").innerHTML = renderTable(ol.data, filtered, 0);
+        //console.log('filter_date_range: ', Date.now() - stime);
     }
 
     gBrush.call(brush.move, ol.date_range.map(x_scale));

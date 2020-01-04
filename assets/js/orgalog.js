@@ -3,21 +3,6 @@ const timestampFormat = "DD MMM YYYY HH:mm"
 class OrgaLog {
 
     constructor() {
-
-        try {
-            if (moment === undefined) { throw ('Missing Library: moment.js') }
-        } catch (error) {
-            console.error(error);
-            throw ('Missing Library: moment.js')
-        }
-
-        try {
-            if (d3 === undefined) { throw ('Missing Library: d3.js') }
-        } catch (error) {
-            console.error(error);
-            throw ('Missing Library: d3.js')
-        }
-
         this._date_range = undefined;
         this._date_field = undefined;
         this._value_range = undefined;
@@ -28,7 +13,7 @@ class OrgaLog {
         this._columns = [];
     }
 
-    static version() { return "0.0" }
+    static version() { return "0.1" }
 
     process(data, deduplicate) {
 
@@ -73,8 +58,12 @@ class OrgaLog {
             return new Date(a[date_field]) - new Date(b[date_field]);
         });
 
+        console.log("TODO: interval smarter - ")
+        let interval = calculateInterval(self._data[0][date_field], self._data[self._data.length - 1][date_field]);
+        console.log('DISPLAY INTERVAL:', interval)
+
         var simplified = self._data.map(function(value) {
-            return ({ timestamp: value[date_field], value: 1 })
+            return ({ timestamp: moment(value[date_field]).format(interval), value: 1 })
         });
 
         // bin the events by timestamps
@@ -185,3 +174,30 @@ String.prototype.hashCode = function() {
     }
     return hash;
 };
+
+function calculateInterval(date1, date2) {
+    let difference = Math.abs(new Date(date2) - new Date(date1));
+    console.log('DIFFERENCE:', difference)
+
+    if (difference < 1000) {
+        // less than a second
+        return "DD MMM YYYY HH:mm:ss:SSSS"
+    }
+    if (difference < (60 * 1000)) {
+        // less than a minute
+        return "DD MMM YYYY HH:mm:ss"
+    }
+    if (difference < (60 * 60 * 1000)) {
+        // less than an hour
+        return "DD MMM YYYY HH:mm"
+    }
+    if (difference < (30 * 24 * 60 * 60 * 1000)) {
+        // less than an month
+        return "DD MMM YYYY HH"
+    }
+    if (difference > (5 * 365 * 24 * 60 * 60 * 1000)) {
+        // greater than 5 years
+        return "MMM YYYY"
+    }
+    return "DD MMM YYYY"
+}
