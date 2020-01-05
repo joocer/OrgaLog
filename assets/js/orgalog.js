@@ -11,6 +11,7 @@ class OrgaLog {
         this._date_fields = [];
         this._deduped = false;
         this._columns = [];
+        this._filters = [];
     }
 
     static version() { return "0.1" }
@@ -63,10 +64,15 @@ class OrgaLog {
             return ({ timestamp: interval.floor(new Date(value[date_field])).getTime(), value: 1 })
         });
 
+        let interval_range = interval.range(new Date(self._data[0][date_field]), new Date(self._data[self._data.length - 2][date_field]));
+        for (var i = 0; i <= interval_range.length; i++) {
+            simplified.push({ timestamp: new Date(interval_range[i]).getTime(), value: 1 });
+        }
+
         // bin the events by timestamps
         var eventCount = d3.nest()
             .key(function(d) { return d.timestamp; })
-            .rollup(function(v) { return v.length; })
+            .rollup(function(v) { return v.length - 1; })
             .entries(simplified);
 
         var stime = Date.now();
@@ -83,6 +89,9 @@ class OrgaLog {
         self._data_index = eventCount.sort(function compare(a, b) {
             return a.timestamp - b.timestamp;
         });
+
+        //fille zeros into the index
+        console.log(this._data_index)
 
         var min_date = d3.min(self._data_index, function(d) {
             return d.timestamp;
@@ -116,25 +125,94 @@ class OrgaLog {
         // range of values from the data set 
     get value_range() { return this._value_range }
     get data() { return this._data }
-        //get data_index() { return this._data_index }
+    get data_index() { return this._data_index }
+
+    //#################################################################################################
+    //## FILTERS
+    //#################################################################################################
+
+    get filters() { return this._filters; }
+
+    add_filter(display, field, value) {
+        console.log('TODO: check the display name is unique')
+        let filter = { "Display": display, "Field": field, "Value": value };
+        this._filters.push(filter);
+        this._filters.sort(filter_compare);
+    }
+
+    remove_filter(display) {
+        for (var i = 0; i < this._filters.length; i++) {
+            if (this._filters[i].Display == display) { this._filters.splice(i, 1); }
+        }
+    }
+
+    // find the filter from the list of all of the known filters
+    find_filter(description) {
+        for (var i = 0; i < this._filters.length; i++) {
+            if (this._filters[i].Display == description) { return this._filters[i]; }
+        }
+        return null;
+    }
+
+    // remove a filter from the list of active filters
+    remove_filter(description) {
+        for (var i = 0; i < this._filters.length; i++) {
+            if (this._filters[i].Display == description) { this._filters.splice(i, 1); }
+        }
+    }
+
+    // this is the compare required to sort the list of filters
+    filter_compare(a, b) {
+        if (a.Display < b.Display) { return -1; }
+        return 1;
+    }
+
+    // execute the filters what have been selected
+    execute_filters(filters) {
+        var stime = Date.now();
+        filtered_data = data.slice();
+        for (var i = 0; i < filters.length; i++) {
+            filtered_data = filtered_data.filter(function(f) { return f[filters[i].Field] == filters[i].Value })
+        }
+        console.log('FILTER: ', Date.now() - stime);
+        return filtered_data;
+    }
+
+    //#################################################################################################
+    //## DISPLAY
+    //#################################################################################################
 
     // this limits the range, applies filters and orders entries
     // the data is not affected, it returns indices to the data
     view(range, filters, order) {
         let self = this;
 
-        if (range === undefined) { range = this._date_range }
+        if (range === undefined && filters === undefined && order === undefined) {
+            return self._data;
+        }
+
+        if (range === undefined) { range = self._date_range }
         if (filters === undefined) { filters = [] }
-        if (order === undefined) { order = this._date_field }
-        // apply range and filters, 
+        if (order === undefined) { order = self._date_field }
+
+        var filtered_data = self._data.slice();
+        filtered_data.columns = self._columns;
+
+        // apply range
+        filtered_data = filtered_data.filter(function(f) {
+                let timestamp = new Date(f[self._date_field]);
+                return (timestamp >= new Date(range[0]) && timestamp <= new Date(range[1]))
+            })
+            // apply filters
+
 
         // sort by field
         // reverse if the fist character is '-' (ascii 45)
         let modifier = 1;
         if (order.charCodeAt[0] = 45) { modifier = -1 }
 
-
-        return this._data_index;
+        filtered_data.columns = self._columns;
+        return filtered_data;
     }
 }
 
@@ -175,13 +253,13 @@ String.prototype.hashCode = function() {
 function get_interval(date1, date2) {
     let difference = Math.abs(Date.parse(date2) - Date.parse(date1));
     const time_formats = [
-        [1000, 'milliseconds', d3.timeMillisecond], // 1
         [60000, 'milliseconds', d3.timeMillisecond], // 60
         [3600000, 'seconds', d3.timeSecond], // 60*60
         [86400000, 'minutes', d3.timeMinute], // 60*60*24
-        [604800000, 'hours', d3.timeHour], // 60*60*24*7
-        [2629800000, 'days', d3.timeDay], // 60*60*24*30.4375
-        [31557600000, 'weeks', d3.timeWeek], // 60*60*24*365.25
+        [6048000000, 'hours', d3.timeHour], // 60*60*24*7 <-- less than 10 days do in hours
+        //[2629800000, 'days', d3.timeDay], // 60*60*24*30.4375 <-- technically redundant
+        //[31557600000, 'weeks', d3.timeWeek], // 60*60*24*365.25 <-- not granular enough
+        [31557600000, 'days', d3.timeDay], // 60*60*24*365.25 *10
         [3155760000000, 'months', d3.timeMonth], // 60*60*24*365.25*100
         [31557600000000, 'years', d3.timeYear] // 60*60*24*365.25*100*10
     ];

@@ -68,6 +68,8 @@
         const {
             dialog
         } = require('electron').remote;
+        var data = [];
+        var orgalog;
 
         function open_file() {
             dialog.showOpenDialog({
@@ -80,16 +82,25 @@
                 document.getElementById("time-series").innerHTML = "";
                 console.log("FILE:", filename);
                 window.document.title = "OrgaLog - " + htmlEncode(filename.substring(filename.lastIndexOf('\\') + 1));
-                var orgalog = new OrgaLog();
+                orgalog = new OrgaLog();
 
-                var data = fs.readFileSync(filename, 'utf8').toString();
+                data = fs.readFileSync(filename, 'utf8').toString();
                 data = d3.csvParse(data);
                 orgalog.process(data, false);
                 display_initial(orgalog);
             })
         }
 
+        function apply_filter() {
+            console.log(execute_filters(data, [{
+                "Display": 'type: air_pressure',
+                "Field": 'username',
+                "Value": 'realDonaldTrump'
+            }]))
+        }
+
         document.getElementById('button-openfile').addEventListener('click', open_file, false);
+        document.getElementById('button-addfilter').addEventListener('click', apply_filter, false);
 
         function htmlEncode(str) {
             return str.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {

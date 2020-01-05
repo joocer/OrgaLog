@@ -22,7 +22,7 @@ function display_initial(ol) {
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var y_scale = d3.scaleLinear()
-        .domain([0, d3.max(ol.view(), function(d) {
+        .domain([0, d3.max(ol.data_index, function(d) {
             return +d.value;
         })])
         .range([height, 0]);
@@ -42,7 +42,7 @@ function display_initial(ol) {
 
     svg.append("g")
         .append("path")
-        .datum(ol.view())
+        .datum(ol.data_index)
         .attr("class", "line")
         .attr("d", d3.line()
             .x(function(d) {
@@ -103,10 +103,8 @@ function display_initial(ol) {
     }
 
     function filter_date_range(date_range) {
-        //let stime = Date.now();
         var minCursor = range_search(ol.data, date_range[0], ol.date_field);
         var maxCursor = range_search(ol.data, date_range[1], ol.date_field);
-        //console.log(minCursor, maxCursor)
         var matches = maxCursor - minCursor;
         var filtered = range(minCursor, maxCursor);
 
@@ -116,8 +114,7 @@ function display_initial(ol) {
             document.getElementById("tabular-data").innerHTML = "";
             return false;
         }
-        document.getElementById("tabular-data").innerHTML = renderTable(ol.data, filtered, 0);
-        //console.log('filter_date_range: ', Date.now() - stime);
+        document.getElementById("tabular-data").innerHTML = renderTable(ol.view(date_range, undefined, undefined), 0);
     }
 
     gBrush.call(brush.move, ol.date_range.map(x_scale));
@@ -170,7 +167,7 @@ function htmlEncode(str) {
 
 // TODO: Sort fields
 // TODO: show/hide fields
-function renderTable(data, indexes, page) {
+function renderTable(data, page) {
     var row_data = ''
     row_data += "<tr>"
     for (var h = 0; h < data.columns.length; h++) {
@@ -178,16 +175,17 @@ function renderTable(data, indexes, page) {
     }
     row_data += "</tr>"
     var max_rows = page_size;
-    if (indexes.length < max_rows) { max_rows = indexes.length; }
+    if (data.length < max_rows) { max_rows = data.length; }
     for (var i = 0; i < max_rows; i++) {
         row_data += "<tr>";
-        var index = i + (page * page_size);
+        let index = i + (page * page_size);
         for (var h = 0; h < data.columns.length; h++) {
-            var cell_value = data[indexes[index]][data.columns[h]];
+            var cell_value = data[index][data.columns[h]];
+            // TODO: don't test every field
             if (is_date(cell_value)) {
-                row_data += "<td>" + moment(data[indexes[index]][data.columns[h]]).format(timestampFormat) + "<td>"
+                row_data += "<td>" + moment(data[index][data.columns[h]]).format(timestampFormat) + "<td>"
             } else {
-                row_data += "<td>" + htmlEncode(data[indexes[index]][data.columns[h]]) + "<td>"
+                row_data += "<td>" + htmlEncode(data[index][data.columns[h]]) + "<td>"
             }
         }
         row_data += "</tr>";
