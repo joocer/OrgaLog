@@ -58,12 +58,9 @@ class OrgaLog {
             return new Date(a[date_field]) - new Date(b[date_field]);
         });
 
-        console.log("TODO: interval smarter - ")
-        let interval = calculateInterval(self._data[0][date_field], self._data[self._data.length - 1][date_field]);
-        console.log('DISPLAY INTERVAL:', interval)
-
+        let interval = get_interval(self._data[0][date_field], self._data[self._data.length - 1][date_field]);
         var simplified = self._data.map(function(value) {
-            return ({ timestamp: moment(value[date_field]).format(interval), value: 1 })
+            return ({ timestamp: interval.floor(new Date(value[date_field])).getTime(), value: 1 })
         });
 
         // bin the events by timestamps
@@ -76,7 +73,7 @@ class OrgaLog {
         // rename the 'key' field to be 'timestamp' (changed by the nest function above)
         eventCount = eventCount.map(function(value) {
             return ({
-                timestamp: new Date(value['key']).getTime(),
+                timestamp: Number(value['key']), // this feels like a hack, why is this a string?
                 value: value['value']
             })
         });
@@ -163,7 +160,7 @@ function get_date_fields(data) {
     return date_fields;
 }
 
-// slightly faster than the copy off Stack Overflow, but still slow 
+// slightly faster than the copy from Stack Overflow, but still slow 
 // about 2x faster than MD5, but this has more clashes
 String.prototype.hashCode = function() {
     let hash = 0
@@ -173,31 +170,29 @@ String.prototype.hashCode = function() {
         hash = hash & hash; // Convert to 32-bit integer
     }
     return hash;
-};
+}
 
-function calculateInterval(date1, date2) {
-    let difference = Math.abs(new Date(date2) - new Date(date1));
-    console.log('DIFFERENCE:', difference)
+function get_interval(date1, date2) {
+    let difference = Math.abs(Date.parse(date2) - Date.parse(date1));
+    const time_formats = [
+        [1000, 'milliseconds', d3.timeMillisecond], // 1
+        [60000, 'milliseconds', d3.timeMillisecond], // 60
+        [3600000, 'seconds', d3.timeSecond], // 60*60
+        [86400000, 'minutes', d3.timeMinute], // 60*60*24
+        [604800000, 'hours', d3.timeHour], // 60*60*24*7
+        [2629800000, 'days', d3.timeDay], // 60*60*24*30.4375
+        [31557600000, 'weeks', d3.timeWeek], // 60*60*24*365.25
+        [3155760000000, 'months', d3.timeMonth], // 60*60*24*365.25*100
+        [31557600000000, 'years', d3.timeYear] // 60*60*24*365.25*100*10
+    ];
 
-    if (difference < 1000) {
-        // less than a second
-        return "DD MMM YYYY HH:mm:ss:SSSS"
+    var i = 0;
+    let format;
+    while (format = time_formats[i++]) {
+        if (difference < format[0]) {
+            console.log('DEBUG: interval units:', format[1]);
+            return format[2]
+        }
     }
-    if (difference < (60 * 1000)) {
-        // less than a minute
-        return "DD MMM YYYY HH:mm:ss"
-    }
-    if (difference < (60 * 60 * 1000)) {
-        // less than an hour
-        return "DD MMM YYYY HH:mm"
-    }
-    if (difference < (30 * 24 * 60 * 60 * 1000)) {
-        // less than an month
-        return "DD MMM YYYY HH"
-    }
-    if (difference > (5 * 365 * 24 * 60 * 60 * 1000)) {
-        // greater than 5 years
-        return "MMM YYYY"
-    }
-    return "DD MMM YYYY"
+    throw new error("Dates too far apart");
 }
