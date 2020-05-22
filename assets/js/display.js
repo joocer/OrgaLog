@@ -185,7 +185,7 @@ function renderTable(data, page) {
             if (is_date(cell_value)) {
                 row_data += "<td>" + moment(data[index][data.columns[h]]).format(timestampFormat) + "<td>"
             } else {
-                row_data += "<td>" + htmlEncode(data[index][data.columns[h]]) + "<td>"
+                row_data += "<td>" + htmlEncode(data[index][data.columns[h]].toString()) + "<td>"
             }
         }
         row_data += "</tr>";
