@@ -17,7 +17,7 @@
     },
     "homepage": "https://github.com/joocer/OrgaLog#readme",
     "dependencies": {
-        "d3": "^5.15.0",
+        "d3": "^7.0.0",
         "moment": "^2.24.0"
     }
 }
